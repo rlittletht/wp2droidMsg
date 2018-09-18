@@ -10,6 +10,10 @@ namespace wp2droidMsg
     {
         static void Main(string[] args)
         {
+            string sInFile = "c:\\temp\\test.xml";
+            string sOutFile = "c:\\temp\\testOut.xml";
+
+
         }
     }
 }
