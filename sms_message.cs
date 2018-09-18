@@ -32,6 +32,7 @@ namespace wp2droidMsg
 
         public SmsMessage() { }
 
+        #region Comparators
         public override bool Equals(Object obj)
         {
             return obj is SmsMessage && this == (SmsMessage) obj;
@@ -89,14 +90,27 @@ namespace wp2droidMsg
 
             return true;
         }
+        #endregion
 
         #region XML I/O
 
+        /*----------------------------------------------------------------------------
+        	%%Function: StringElementReadFromXml
+        	%%Qualified: wp2droidMsg.SmsMessage.StringElementReadFromXml
+        	%%Contact: rlittle
+        	
+        ----------------------------------------------------------------------------*/
         static string StringElementReadFromXml(XmlReader xr)
         {
             return xr.ReadElementContentAsString("string", "");
         }
 
+        /*----------------------------------------------------------------------------
+        	%%Function: MsecUnixFromSecondWin
+        	%%Qualified: wp2droidMsg.SmsMessage.MsecUnixFromSecondWin
+        	%%Contact: rlittle
+        	
+        ----------------------------------------------------------------------------*/
         static ulong MsecUnixFromSecondWin(ulong nWpDate)
         {
             return (((nWpDate / (10 * 100)) - 116444736000000) + 5) / 10;
