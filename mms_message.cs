@@ -17,6 +17,7 @@ namespace wp2droidMsg
         private string m_sData; //optional
 
     }
+
     public class MmsMessage
     {
         // from the schema at http://synctech.com.au/wp-content/uploads/2018/01/sms.xsd_.txt

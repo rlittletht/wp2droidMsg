@@ -54,6 +54,7 @@
     <Compile Include="sms_message.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="wp_mms_message.cs" />
     <Compile Include="xmlio.cs" />
   </ItemGroup>
   <ItemGroup>

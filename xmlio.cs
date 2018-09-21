@@ -1,5 +1,6 @@
 ﻿
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Xml;
 using NUnit.Framework;
@@ -147,7 +148,7 @@ namespace wp2droidMsg
         	
             this is either empty or has a single <string> element as a child
         ----------------------------------------------------------------------------*/
-        public static string RecepientsReadElement(XmlReader xr)
+        public static string[] RecepientsReadElement(XmlReader xr)
         {
             if (xr.Name != "Recepients")
                 throw new Exception("not at the correct node");
@@ -158,6 +159,7 @@ namespace wp2droidMsg
                 return null;
             }
 
+            List<string> pls = new List<string>();
             // read for the child
             while (xr.Read())
             {
@@ -176,14 +178,21 @@ namespace wp2droidMsg
 
                 if (nt == XmlNodeType.Element)
                 {
-                    string s = XmlIO.StringElementReadFromXml(xr).Trim();
+                    while (true)
+                    {
+                        string s = XmlIO.StringElementReadFromXml(xr).Trim();
+                        pls.Add(s);
 
-                    // now we should be at the EndElement for Recepients
-                    if (xr.Name != "Recepients")
-                        throw new Exception("not at the correct node");
+                        // now we should be at the EndElement for Recepients
+                        if (xr.Name == "Recepients")
+                        {
+                            xr.ReadEndElement();
+                            return pls.ToArray();
+                        }
 
-                    xr.ReadEndElement();
-                    return s;
+                        if (xr.Name != "string")
+                            throw new Exception("not at the correct node");
+                    }
                 }
             }
 
@@ -267,17 +276,18 @@ namespace wp2droidMsg
         }
 
         // NOTE: This does NOT test if the parser is left in a good state!!
-        [TestCase("<Recepients><string>+14253816865</string></Recepients>", "+14253816865", null)]
-        [TestCase("<Recepients><string>\r+14253816865</string></Recepients>", "+14253816865", null)]
-        [TestCase("<Recepients><string>(425) 381-6865</string></Recepients>", "(425) 381-6865", null)]
-        [TestCase("<Recepients>\r\n<string>+14253816865</string></Recepients>", "+14253816865", null)]
+        [TestCase("<Recepients><string>+12345</string></Recepients>", new[]{"+12345"}, null)]
+        [TestCase("<Recepients><string>\r+12345</string></Recepients>", new[] { "+12345"}, null)]
+        [TestCase("<Recepients><string>(111) 222-3333</string></Recepients>", new[] { "(111) 222-3333"}, null)]
+        [TestCase("<Recepients>\r\n<string>+12345</string></Recepients>", new[] { "+12345"}, null)]
         [TestCase("<Recepients />", null, null)]
         [TestCase("<Recepients>\r\n\t</Recepients>", null, null)]
         [TestCase("<Recepients></Recepients>", null, null)]
-        [TestCase("<Recepients><string2>+14253816865</string2></Recepients>", null, "System.Xml.XmlException")]
-        [TestCase("<Recepients><foo/><string>+14253816865</string></Recepients>", null, "System.Xml.XmlException")]
+        [TestCase("<Recepients><string2>+12345</string2></Recepients>", null, "System.Xml.XmlException")]
+        [TestCase("<Recepients><foo/><string>+12345</string></Recepients>", null, "System.Xml.XmlException")]
+        [TestCase("<Recepients><string>+4321</string><string>12345</string></Recepients>", new[] { "+4321", "12345"}, null)]
         [Test]
-        public static void TestRecepientsReadElement(string sTest, string sExpectedReturn, string sExpectedException)
+        public static void TestRecepientsReadElement(string sTest, string []rgsExpectedReturn, string sExpectedException)
         {
             XmlReader xr = SetupXmlReaderForTest(sTest);
             try
@@ -292,13 +302,14 @@ namespace wp2droidMsg
             }
 
             if (sExpectedException == null)
-                Assert.AreEqual(sExpectedReturn, RecepientsReadElement(xr));
+                Assert.AreEqual(rgsExpectedReturn, RecepientsReadElement(xr));
             if (sExpectedException != null)
                 RunTestExpectingException(() => RecepientsReadElement(xr), sExpectedException);
         }
 
         [TestCase("<bar><Recepients><string>1234</string></Recepients><foo/></bar>", XmlNodeType.Element, "foo")]
         [TestCase("<Recepients><string>1234</string></Recepients> ", XmlNodeType.Whitespace, null)]
+        [TestCase("<Recepients><string>1234</string><string>4321</string></Recepients> ", XmlNodeType.Whitespace, null)]
         [TestCase("<Recepients/> ", XmlNodeType.Whitespace, null)]
         [TestCase("<bar><Recepients/><foo/></bar>", XmlNodeType.Element, "foo")]
         [TestCase("<bar><Recepients> </Recepients><foo/></bar>", XmlNodeType.Element, "foo")]

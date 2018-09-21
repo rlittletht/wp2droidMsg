@@ -184,9 +184,15 @@ namespace wp2droidMsg
             switch (xr.Name)
             {
                 case "Recepients":
-                    string sRecipients = XmlIO.RecepientsReadElement(xr);
-                    if (sRecipients != null)
-                        sms.m_sAddress = sRecipients;
+                    string[] rgsRecipients = XmlIO.RecepientsReadElement(xr);
+                    if (rgsRecipients != null)
+                    {
+                        if (rgsRecipients.Length != 1)
+                            throw new Exception("There can be only one receipient in an SMS message");
+
+                        sms.m_sAddress = rgsRecipients[0];
+                    }
+
                     // if null, then don't change m_sAddress...
                     break;
                 case "Body":
