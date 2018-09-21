@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Runtime.InteropServices.WindowsRuntime;
 using System.Xml;
+using NUnit.Framework;
 
 namespace wp2droidMsg
 {
@@ -11,6 +12,41 @@ namespace wp2droidMsg
         private string m_sData;
 
         public WpMessageAttachment() { }
+
+        #region Comparators
+        public override bool Equals(Object obj)
+        {
+            return obj is WpMessageAttachment && this == (WpMessageAttachment)obj;
+        }
+
+        public override int GetHashCode()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static bool operator !=(WpMessageAttachment left, WpMessageAttachment right)
+        {
+            return !(left == right);
+        }
+
+        public static bool operator ==(WpMessageAttachment left, WpMessageAttachment right)
+        {
+            if (ReferenceEquals(left, null) || ReferenceEquals(right, null))
+            {
+                if (ReferenceEquals(left, right))
+                    return true;
+                return false;
+            }
+
+            if (left.m_sData != right.m_sData)
+                return false;
+
+            if (left.m_sContentType != right.m_sContentType)
+                return false;
+
+            return true;
+        }
+        #endregion
 
         static void ParseMessageAttachmentElement(XmlReader xr, WpMessageAttachment att)
         {
@@ -62,6 +98,55 @@ namespace wp2droidMsg
             }
 
             throw new Exception("hit EOF before finding end MessageAttachment element");
+        }
+
+        static WpMessageAttachment AttCreateFromString(string s)
+        {
+            string[] rgs = s.Split('|');
+            WpMessageAttachment att = new WpMessageAttachment();
+
+            att.m_sContentType = XmlIO.Nullable(rgs[0]);
+            att.m_sData = XmlIO.Nullable(rgs[1]);
+
+            return att;
+        }
+
+        [TestCase(null, "<null>|<null>", XmlNodeType.Element, null, null)]
+        [TestCase("<Message><MessageAttachment><AttachmentContentType>test/plain</AttachmentContentType><AttachmentDataBase64String>test</AttachmentDataBase64String></MessageAttachment></Message>", "test/plain|test", XmlNodeType.EndElement, "Message", null)]
+        [TestCase("<MessageAttachment><AttachmentContentType>test/plain</AttachmentContentType><AttachmentDataBase64String>test</AttachmentDataBase64String></MessageAttachment>", "test/plain|test", XmlNodeType.None, null, null)]
+        [Test]
+        public static void CreateFromXmlReader(string sIn, string sAttExpected, XmlNodeType ntExpectedNext, string sElementExpectedNext, string sExpectedException)
+        {
+            WpMessageAttachment att = AttCreateFromString(sAttExpected);
+
+            if (sIn == null)
+            {
+                Assert.AreEqual(att, new WpMessageAttachment());
+                return;
+            }
+
+            XmlReader xr = XmlIO.SetupXmlReaderForTest(sIn);
+
+            try
+            {
+                XmlIO.AdvanceReaderToTestContent(xr, "MessageAttachment");
+            }
+            catch (Exception e)
+            {
+                if (sExpectedException != null)
+                    return;
+
+                throw e;
+            }
+
+            if (sExpectedException == null)
+                Assert.AreEqual(att, CreateFromXmlReader(xr));
+            if (sExpectedException != null)
+                XmlIO.RunTestExpectingException(() => CreateFromXmlReader(xr), sExpectedException);
+
+            Assert.AreEqual(ntExpectedNext, xr.NodeType);
+            if (sElementExpectedNext != null)
+                Assert.AreEqual(sElementExpectedNext, xr.Name);
         }
     }
 
