@@ -13,7 +13,9 @@ namespace wp2droidMsg
             string sInFile = "c:\\temp\\test.xml";
             string sOutFile = "c:\\temp\\testOut.xml";
 
+            SmsConverter smsc = new SmsConverter();
 
+            smsc.Convert(sInFile, sOutFile);
         }
     }
 }

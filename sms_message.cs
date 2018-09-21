@@ -94,6 +94,24 @@ namespace wp2droidMsg
 
         #region XML I/O
 
+        public void WriteToDroidXml(XmlWriter xw)
+        {
+            xw.WriteStartElement("sms");
+            xw.WriteAttributeString("protocol", m_protocol.ToString());
+            xw.WriteAttributeString("address", m_sAddress ?? "");
+            xw.WriteAttributeString("date", m_msecUnixDate.ToString());
+            xw.WriteAttributeString("type", m_type.ToString());
+            xw.WriteAttributeString("subject", m_sSubject ?? "null");
+            xw.WriteAttributeString("body", m_sBody ?? "null" );
+            xw.WriteAttributeString("toa", m_sToa ?? "null");
+            xw.WriteAttributeString("sc_toa", m_sSc_Toa ?? "null");
+            xw.WriteAttributeString("service_center", m_sServiceCenter ?? "null");
+            xw.WriteAttributeString("read", m_nRead.ToString());
+            xw.WriteAttributeString("status", m_nStatus.ToString());
+            xw.WriteAttributeString("locked", m_nLocked.ToString());
+            xw.WriteEndElement();
+        }
+
         /*----------------------------------------------------------------------------
         	%%Function: StringElementReadFromXml
         	%%Qualified: wp2droidMsg.SmsMessage.StringElementReadFromXml
@@ -129,6 +147,7 @@ namespace wp2droidMsg
             SmsMessage sms = new SmsMessage();
 
             sms.m_type = 2;    // absence of the IsIncoming element meants it is a sent text, hence 2
+            sms.m_nStatus = -1; // always -1 as far as I can tell
 
             if (xr.Name != "Message")
                 throw new Exception("not at the correct node");
@@ -661,24 +680,24 @@ namespace wp2droidMsg
 
         // Order is:    nProtocol|sAddress|nUnixDate|nType|sSubject|sBody|sToa|sSc_toa|sServiceCenter|nRead|nStatus|nLocked|nDateSent|sReadableDate|sContactName
         [TestCase(null, "0|<null>|0|0|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Recepients><string>+1234</string></Recepients></Message>", "0|+1234|0|2|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Body>testing</Body></Message>", "0|<null>|0|2|<null>|testing|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><IsIncoming>true</IsIncoming></Message>", "0|<null>|0|1|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><IsRead>1</IsRead></Message>", "0|<null>|0|2|<null>|<null>|<null>|<null>|<null>|1|0|0|<null>|<null>", null)]
-        [TestCase("<Message><LocalTimestamp>131777420698276081</LocalTimestamp></Message>", "0|<null>|1533268469828|2|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Sender>+4321</Sender></Message>", "0|+4321|0|2|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Sender>+4321</Sender><LocalTimestamp>131777420698276081</LocalTimestamp></Message>", "0|+4321|1533268469828|2|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Sender>+4321</Sender> <LocalTimestamp>131777420698276081</LocalTimestamp></Message>", "0|+4321|1533268469828|2|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Sender>+4321</Sender>\r\n <LocalTimestamp>131777420698276081</LocalTimestamp></Message>", "0|+4321|1533268469828|2|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Sender>+4321</Sender><!-- comment here --> <LocalTimestamp>131777420698276081</LocalTimestamp></Message>", "0|+4321|1533268469828|2|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Body><![CDATA[testing]]></Body></Message>", "0|<null>|0|2|<null>|testing|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Body>testing\nnewline</Body></Message>", "0|<null>|0|2|<null>|testing\nnewline|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Recepients><string>+1234</string></Recepients><Body>foo&amp;bar</Body></Message>", "0|+1234|0|2|<null>|foo&bar|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Body>testing</Message>", "0|<null>|0|2|<null>|testing|<null>|<null>|<null>|0|0|0|<null>|<null>", "System.Xml.XmlException")]
-        [TestCase("<Message><Recepients><string>+14255551212</string></Recepients><Body>:-)</Body><IsIncoming>false</IsIncoming><IsRead>true</IsRead><Attachments /><LocalTimestamp>131777420698276081</LocalTimestamp><Sender /></Message>", "0|+14255551212|1533268469828|2|<null>|:-)|<null>|<null>|<null>|1|0|0|<null>|<null>", null)]
-        [TestCase("<Message></Message>", "0|<null>|0|2|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message></Message>", "0|<null>|0|2|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", null)]
-        [TestCase("<Message><Unknown>foobar</Unknown></Message>", "0|<null>|0|2|<null>|<null>|<null>|<null>|<null>|0|0|0|<null>|<null>", "System.Exception")]
+        [TestCase("<Message><Recepients><string>+1234</string></Recepients></Message>", "0|+1234|0|2|<null>|<null>|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><Body>testing</Body></Message>", "0|<null>|0|2|<null>|testing|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><IsIncoming>true</IsIncoming></Message>", "0|<null>|0|1|<null>|<null>|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><IsRead>1</IsRead></Message>", "0|<null>|0|2|<null>|<null>|<null>|<null>|<null>|1|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><LocalTimestamp>131777420698276081</LocalTimestamp></Message>", "0|<null>|1533268469828|2|<null>|<null>|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><Sender>+4321</Sender></Message>", "0|+4321|0|2|<null>|<null>|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><Sender>+4321</Sender><LocalTimestamp>131777420698276081</LocalTimestamp></Message>", "0|+4321|1533268469828|2|<null>|<null>|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><Sender>+4321</Sender> <LocalTimestamp>131777420698276081</LocalTimestamp></Message>", "0|+4321|1533268469828|2|<null>|<null>|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><Sender>+4321</Sender>\r\n <LocalTimestamp>131777420698276081</LocalTimestamp></Message>", "0|+4321|1533268469828|2|<null>|<null>|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><Sender>+4321</Sender><!-- comment here --> <LocalTimestamp>131777420698276081</LocalTimestamp></Message>", "0|+4321|1533268469828|2|<null>|<null>|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><Body><![CDATA[testing]]></Body></Message>", "0|<null>|0|2|<null>|testing|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><Body>testing\nnewline</Body></Message>", "0|<null>|0|2|<null>|testing\nnewline|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><Recepients><string>+1234</string></Recepients><Body>foo&amp;bar</Body></Message>", "0|+1234|0|2|<null>|foo&bar|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><Body>testing</Message>", "0|<null>|0|2|<null>|testing|<null>|<null>|<null>|0|-1|0|<null>|<null>", "System.Xml.XmlException")]
+        [TestCase("<Message><Recepients><string>+14255551212</string></Recepients><Body>:-)</Body><IsIncoming>false</IsIncoming><IsRead>true</IsRead><Attachments /><LocalTimestamp>131777420698276081</LocalTimestamp><Sender /></Message>", "0|+14255551212|1533268469828|2|<null>|:-)|<null>|<null>|<null>|1|-1|0|<null>|<null>", null)]
+        [TestCase("<Message></Message>", "0|<null>|0|2|<null>|<null>|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message></Message>", "0|<null>|0|2|<null>|<null>|<null>|<null>|<null>|0|-1|0|<null>|<null>", null)]
+        [TestCase("<Message><Unknown>foobar</Unknown></Message>", "0|<null>|0|2|<null>|<null>|<null>|<null>|<null>|0|-1|0|<null>|<null>", "System.Exception")]
         [Test]
         public static void TestCreateFromWindowsPhoneXmlReader(string sIn, string sSmsExpected,
             string sExpectedException)
