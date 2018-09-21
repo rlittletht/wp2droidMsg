@@ -113,17 +113,6 @@ namespace wp2droidMsg
         }
 
         /*----------------------------------------------------------------------------
-        	%%Function: StringElementReadFromXml
-        	%%Qualified: wp2droidMsg.SmsMessage.StringElementReadFromXml
-        	%%Contact: rlittle
-        	
-        ----------------------------------------------------------------------------*/
-        static string StringElementReadFromXml(XmlReader xr)
-        {
-            return xr.ReadElementContentAsString("string", "");
-        }
-
-        /*----------------------------------------------------------------------------
         	%%Function: MsecUnixFromSecondWin
         	%%Qualified: wp2droidMsg.SmsMessage.MsecUnixFromSecondWin
         	%%Contact: rlittle
@@ -277,7 +266,7 @@ namespace wp2droidMsg
 
                 if (nt == XmlNodeType.Element)
                 {
-                    string s = StringElementReadFromXml(xr).Trim();
+                    string s = XmlIO.StringElementReadFromXml(xr).Trim();
 
                     // now we should be at the EndElement for Recepients
                     if (xr.Name != "Recepients")
@@ -488,9 +477,9 @@ namespace wp2droidMsg
             }
 
             if (sExpectedException == null)
-                Assert.AreEqual(sExpectedReturn, StringElementReadFromXml(xr));
+                Assert.AreEqual(sExpectedReturn, XmlIO.StringElementReadFromXml(xr));
             if (sExpectedException != null)
-                RunTestExpectingException(() => StringElementReadFromXml(xr), sExpectedException);
+                RunTestExpectingException(() => XmlIO.StringElementReadFromXml(xr), sExpectedException);
         }
 
         // NOTE: This does NOT test if the parser is left in a good state!!
