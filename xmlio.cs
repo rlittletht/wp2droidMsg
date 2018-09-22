@@ -29,7 +29,6 @@ namespace wp2droidMsg
         	
             read the givent element as a string
         ----------------------------------------------------------------------------*/
-
         public static string ReadGenericStringElement(XmlReader xr, string sElement)
         {
             if (xr.Name != sElement)
@@ -58,7 +57,6 @@ namespace wp2droidMsg
         	
             convert the given string into an integer
         ----------------------------------------------------------------------------*/
-
         private static int? ConvertElementStringToInt(string sElementString)
         {
             if (sElementString != null)
@@ -74,7 +72,6 @@ namespace wp2droidMsg
         	
             read the given element as an integer
         ----------------------------------------------------------------------------*/
-
         private static int? ReadGenericIntElement(XmlReader xr, string sElement)
         {
             return ConvertElementStringToInt(ReadGenericStringElement(xr, sElement));
@@ -86,7 +83,6 @@ namespace wp2droidMsg
         	%%Contact: rlittle
         	
         ----------------------------------------------------------------------------*/
-
         private static UInt64? ConvertElementStringToUInt64(string sElementString)
         {
             if (sElementString != null)
@@ -101,7 +97,6 @@ namespace wp2droidMsg
         	%%Contact: rlittle
         	
         ----------------------------------------------------------------------------*/
-
         public static UInt64? ReadGenericUInt64Element(XmlReader xr, string sElement)
         {
             return ConvertElementStringToUInt64(ReadGenericStringElement(xr, sElement));
@@ -114,8 +109,7 @@ namespace wp2droidMsg
         	
             convert the given string into a bool
         ----------------------------------------------------------------------------*/
-
-        private static bool? ConvertElementStringToBool(string sElementString)
+        public static bool? ConvertElementStringToBool(string sElementString)
         {
             if (sElementString == null)
                 return null;
@@ -135,7 +129,6 @@ namespace wp2droidMsg
         	
             Read the given element as a boolean
         ----------------------------------------------------------------------------*/
-
         public static bool? ReadGenericBoolElement(XmlReader xr, string sElement)
         {
             return ConvertElementStringToBool(ReadGenericStringElement(xr, sElement));
@@ -181,6 +174,8 @@ namespace wp2droidMsg
                     while (true)
                     {
                         string s = XmlIO.StringElementReadFromXml(xr).Trim();
+                        SkipNonContent(xr);
+
                         pls.Add(s);
 
                         // now we should be at the EndElement for Recepients
@@ -219,6 +214,38 @@ namespace wp2droidMsg
             return XmlReader.Create(new StringReader(sTestString));
         }
 
+        public static bool FIsContentNode(XmlNodeType nt)
+        {
+            if (nt == XmlNodeType.Attribute
+                || nt == XmlNodeType.Element
+                || nt == XmlNodeType.EndElement
+                || nt == XmlNodeType.EntityReference
+                || nt == XmlNodeType.CDATA
+                || nt == XmlNodeType.SignificantWhitespace
+                || nt == XmlNodeType.Text)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        /*----------------------------------------------------------------------------
+        	%%Function: SkipNonContent
+        	%%Qualified: wp2droidMsg.XmlIO.SkipNonContent
+        	%%Contact: rlittle
+        	
+            Skip over all the nodes that should be ignore when just parsing for
+            elements/attributes/text content
+        ----------------------------------------------------------------------------*/
+        public static void SkipNonContent(XmlReader xr)
+        {
+            while (!FIsContentNode(xr.NodeType))
+            {
+                if (!xr.Read())
+                    break;
+            }
+        }
+
         public static void AdvanceReaderToTestContent(XmlReader xr, string sElementTest)
         {
             XmlNodeType nt;
@@ -247,6 +274,43 @@ namespace wp2droidMsg
                 Assert.Throws<FormatException>(pfn);
             else if (sExpectedException != null)
                 throw new Exception("unknown exception type");
+        }
+
+        [TestCase("<foo>&amp;</foo>", "foo", XmlNodeType.Text, "", null)] // entities are resolved to text
+        [TestCase("<foo><![CDATA[text]]></foo>", "foo", XmlNodeType.CDATA, "", null)] // CDATA is resolved to text
+        [TestCase("<foo><!-- comment before --><![CDATA[text]]></foo>", "foo", XmlNodeType.CDATA, "", null)] // CDATA is resolved to text
+        [TestCase("<foo> </foo>", "foo", XmlNodeType.EndElement, "foo", null)]
+        [TestCase("<foo xml:space='preserve'> </foo>", "foo", XmlNodeType.SignificantWhitespace, "", null)]
+        [TestCase("<foo attr='baz'><bar/></foo>", "foo", XmlNodeType.Element, "bar", null)]
+        [TestCase("<foo><!-- comment here --><bar/></foo>", "foo", XmlNodeType.Element, "bar", null)]
+        [TestCase("<foo><bar/></foo>", "foo", XmlNodeType.Element, "bar", null)]
+        [TestCase("<foo></foo>", "foo", XmlNodeType.EndElement, "foo", null)]
+        [Test]
+        public static void TestSkipNonContent(string sTest, string sWrapperElement, XmlNodeType ntExpectedNext,
+            string sExpectedNext, string sExpectedException)
+        {
+            XmlReader xr = SetupXmlReaderForTest(sTest);
+            try
+            {
+                AdvanceReaderToTestContent(xr, sWrapperElement);
+                xr.ReadStartElement(); // advance past the wrapper elements
+            }
+            catch (Exception e)
+            {
+                if (sExpectedException != null)
+                    return;
+                throw e;
+            }
+
+            if (sExpectedException != null)
+            {
+                RunTestExpectingException(() => SkipNonContent(xr), sExpectedException);
+                return;
+            }
+
+            SkipNonContent(xr);
+            Assert.AreEqual(ntExpectedNext, xr.NodeType);
+            Assert.AreEqual(sExpectedNext, xr.Name);
         }
 
         [TestCase("<string>test</string>", "test", null)]
@@ -285,7 +349,17 @@ namespace wp2droidMsg
         [TestCase("<Recepients></Recepients>", null, null)]
         [TestCase("<Recepients><string2>+12345</string2></Recepients>", null, "System.Xml.XmlException")]
         [TestCase("<Recepients><foo/><string>+12345</string></Recepients>", null, "System.Xml.XmlException")]
-        [TestCase("<Recepients><string>+4321</string><string>12345</string></Recepients>", new[] { "+4321", "12345"}, null)]
+        [TestCase("<Recepients xmlns:a='b'><string>+4321</string><string>12345</string></Recepients>", new[] { "+4321", "12345" }, null)]
+        [TestCase("<Recepients attr='a'><string>+4321</string><string>12345</string></Recepients>", new[] { "+4321", "12345" }, null)]
+        [TestCase("<Recepients><string>+4321</string><string>12345</string></Recepients>", new[] { "+4321", "12345" }, null)]
+        [TestCase("<!-- comment between --><Recepients><string>+4321</string><string>12345</string></Recepients>", new[] { "+4321", "12345" }, null)]
+        [TestCase("<Recepients><!-- comment between --><string>+4321</string><string>12345</string></Recepients>", new[] { "+4321", "12345" }, null)]
+        [TestCase("<Recepients><string><!-- comment between -->+4321</string><string>12345</string></Recepients>", new[] { "+4321", "12345" }, null)]
+        [TestCase("<Recepients><string>+4321<!-- comment between --></string><string>12345</string></Recepients>", new[] { "+4321", "12345" }, null)]
+        [TestCase("<Recepients><string>+4321</string><!-- comment between --><string>12345</string></Recepients>", new[] { "+4321", "12345" }, null)]
+        [TestCase("<Recepients><string>+4321</string><string><!-- comment between -->12345</string></Recepients>", new[] { "+4321", "12345" }, null)]
+        [TestCase("<Recepients><string>+4321</string><string>12345<!-- comment between --></string></Recepients>", new[] { "+4321", "12345" }, null)]
+        [TestCase("<Recepients><string>+4321</string><string>12345</string><!-- comment between --></Recepients>", new[] { "+4321", "12345" }, null)]
         [Test]
         public static void TestRecepientsReadElement(string sTest, string []rgsExpectedReturn, string sExpectedException)
         {
@@ -345,11 +419,11 @@ namespace wp2droidMsg
             {
                 AdvanceReaderToTestContent(xr, sExpectedElement);
             }
-            catch (Exception e)
+            catch (Exception)
             {
                 if (sExpectedException != null)
                     return;
-                throw e;
+                throw;
             }
 
             if (sExpectedException == null)
