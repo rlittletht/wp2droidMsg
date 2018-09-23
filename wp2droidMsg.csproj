@@ -49,6 +49,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="MmsConverter.cs" />
     <Compile Include="mms_message.cs" />
     <Compile Include="SmsConverter.cs" />
     <Compile Include="sms_message.cs" />
