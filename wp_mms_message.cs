@@ -13,6 +13,9 @@ namespace wp2droidMsg
         private string m_sContentType;
         private string m_sData;
 
+        public string ContentType => m_sContentType;
+        public string Data => m_sData;
+
         public WpMessageAttachment() { }
 
         #region Comparators
@@ -168,8 +171,19 @@ namespace wp2droidMsg
         private string m_sBody;
         private bool m_fIncoming;
         private bool m_fRead;
+        private ulong m_ulLocalTimestamp;
+        private string m_sSender;
 
         private List<WpMessageAttachment> m_platt;
+
+        public string[] Recipients => m_rgsRecipients;
+        public string Body => m_sBody;
+        public bool Incoming => m_fIncoming;
+        public bool Read => m_fRead;
+        public ulong LocalTimestamp => m_ulLocalTimestamp;
+        public string Sender => m_sSender;
+
+        public List<WpMessageAttachment> Attachments => m_platt;
 
         public WpMessage() { }
 
@@ -241,6 +255,12 @@ namespace wp2droidMsg
             if (left.m_fRead != right.m_fRead)
                 return false;
 
+            if (left.m_sSender != right.m_sSender)
+                return false;
+
+            if (left.m_ulLocalTimestamp != right.m_ulLocalTimestamp)
+                return false;
+            
             if (!FEqArray<string>(left.m_rgsRecipients, right.m_rgsRecipients))
                 return false;
 
@@ -271,6 +291,12 @@ namespace wp2droidMsg
                     break;
                 case "IsRead":
                     wpm.m_fRead = XmlIO.ReadGenericBoolElement(xr, "IsRead") ?? false;
+                    break;
+                case "Sender":
+                    wpm.m_sSender = XmlIO.ReadGenericStringElement(xr, "Sender");
+                    break;
+                case "LocalTimestamp":
+                    wpm.m_ulLocalTimestamp = XmlIO.ReadGenericUInt64Element(xr, "LocalTimestamp") ?? 0;
                     break;
                 case "Attachments":
                     xr.ReadStartElement();  // consume the Attachment element
