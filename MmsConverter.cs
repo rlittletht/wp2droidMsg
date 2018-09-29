@@ -72,22 +72,21 @@ namespace wp2droidMsg
             xr.Close();
             xr.Dispose();
 
-            foreach (WpMessage wpm in mmses)
-            {
-                MmsMessage mms = MmsMessage.CreateFromWpMmsMessage(wpm);
-
-            }
-
-
             // ok, now we have a collection of messages...now we have to write them out...
+            XmlWriterSettings xws = new XmlWriterSettings();
+            xws.Indent = true;
 
-            XmlWriter xw = XmlTextWriter.Create(sOutFile);
-
+            XmlWriter xw = XmlTextWriter.Create(sOutFile, xws);
+            
             xw.WriteStartDocument();
             xw.WriteStartElement("smses");
             xw.WriteAttributeString("count", mmses.Count.ToString());
-            //foreach (MmsMessage sms in mmses)
-//                sms.WriteToDroidXml(xw);
+            int seqNo = 1;
+            foreach (WpMessage wpm in mmses)
+            {
+                MmsMessage mms = MmsMessage.CreateFromWpMmsMessage(wpm, seqNo++);
+                mms.WriteToDroidXml(xw);
+            }
 
             xw.Flush();
             xw.Close();

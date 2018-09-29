@@ -505,7 +505,7 @@ namespace wp2droidMsg
                 RunTestExpectingException(() => ConvertElementStringToBool(sTest), sExpectedException);
         }
 
-        public static string Nullable(string s)
+        public static string FromNullable(string s)
         {
             if (s == "<null>")
                 return null;

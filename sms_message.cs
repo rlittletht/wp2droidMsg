@@ -118,7 +118,7 @@ namespace wp2droidMsg
         	%%Contact: rlittle
         	
         ----------------------------------------------------------------------------*/
-        static ulong MsecUnixFromSecondWin(ulong nWpDate)
+        public static ulong MsecUnixFromSecondWin(ulong nWpDate)
         {
             return (((nWpDate / (10 * 100)) - 116444736000000) + 5) / 10;
         }
@@ -257,19 +257,19 @@ namespace wp2droidMsg
             SmsMessage sms = new SmsMessage();
 
             sms.m_protocol = int.Parse(rgs[0]);
-            sms.m_sAddress = XmlIO.Nullable(rgs[1]);
+            sms.m_sAddress = XmlIO.FromNullable(rgs[1]);
             sms.m_msecUnixDate = UInt64.Parse(rgs[2]);
             sms.m_type = int.Parse(rgs[3]);
-            sms.m_sSubject = XmlIO.Nullable(rgs[4]);
-            sms.m_sBody = XmlIO.Nullable(rgs[5]);
-            sms.m_sToa = XmlIO.Nullable(rgs[6]);
-            sms.m_sSc_Toa = XmlIO.Nullable(rgs[7]);
-            sms.m_sServiceCenter = XmlIO.Nullable(rgs[8]);
+            sms.m_sSubject = XmlIO.FromNullable(rgs[4]);
+            sms.m_sBody = XmlIO.FromNullable(rgs[5]);
+            sms.m_sToa = XmlIO.FromNullable(rgs[6]);
+            sms.m_sSc_Toa = XmlIO.FromNullable(rgs[7]);
+            sms.m_sServiceCenter = XmlIO.FromNullable(rgs[8]);
             sms.m_nRead = int.Parse(rgs[9]);
             sms.m_nStatus = int.Parse(rgs[10]);
             sms.m_nLocked = int.Parse(rgs[11]);
-            sms.m_sReadableDate = XmlIO.Nullable(rgs[12]);
-            sms.m_sContactName = XmlIO.Nullable(rgs[13]);
+            sms.m_sReadableDate = XmlIO.FromNullable(rgs[12]);
+            sms.m_sContactName = XmlIO.FromNullable(rgs[13]);
 
             return sms;
         }

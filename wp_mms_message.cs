@@ -114,8 +114,8 @@ namespace wp2droidMsg
             string[] rgs = s.Split(chSep);
             WpMessageAttachment att = new WpMessageAttachment();
 
-            att.m_sContentType = XmlIO.Nullable(rgs[0]);
-            att.m_sData = XmlIO.Nullable(rgs[1]);
+            att.m_sContentType = XmlIO.FromNullable(rgs[0]);
+            att.m_sData = XmlIO.FromNullable(rgs[1]);
 
             return att;
         }
@@ -393,9 +393,9 @@ namespace wp2droidMsg
             else
                 wpm.m_rgsRecipients = rgs[0].Split(':');
 
-            wpm.m_sBody = XmlIO.Nullable(rgs[1]);
-            wpm.m_fIncoming = XmlIO.ConvertElementStringToBool(XmlIO.Nullable(rgs[2])) ?? false;
-            wpm.m_fRead = XmlIO.ConvertElementStringToBool(XmlIO.Nullable(rgs[3])) ?? false;
+            wpm.m_sBody = XmlIO.FromNullable(rgs[1]);
+            wpm.m_fIncoming = XmlIO.ConvertElementStringToBool(XmlIO.FromNullable(rgs[2])) ?? false;
+            wpm.m_fRead = XmlIO.ConvertElementStringToBool(XmlIO.FromNullable(rgs[3])) ?? false;
 
             if (rgs[4] == "<null>")
                 wpm.m_platt = null;

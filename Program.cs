@@ -10,12 +10,18 @@ namespace wp2droidMsg
     {
         static void Main(string[] args)
         {
-            string sInFile = "c:\\temp\\test.xml";
+//            string sInFile = "c:\\temp\\test.xml";
+            string sInFile = "c:\\temp\\WpMMS_Test.xml";
             string sOutFile = "c:\\temp\\testOut.xml";
 
-            SmsConverter smsc = new SmsConverter();
+            //SmsConverter smsc = new SmsConverter();
+
+            //smsc.Convert(sInFile, sOutFile);
+
+            MmsConverter smsc = new MmsConverter();
 
             smsc.Convert(sInFile, sOutFile);
+
         }
     }
 }
