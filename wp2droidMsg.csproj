@@ -50,17 +50,19 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MmsConverter.cs" />
-    <Compile Include="mms_message.cs" />
     <Compile Include="SmsConverter.cs" />
-    <Compile Include="sms_message.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="wp_mms_message.cs" />
-    <Compile Include="xmlio.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\liblet\cs\TCore.MMS\TCore.MMS.csproj">
+      <Project>{5714c112-81ea-4aa1-b37e-1a0725b45704}</Project>
+      <Name>TCore.MMS</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
